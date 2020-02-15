@@ -1,11 +1,12 @@
 scholarships.db
-config.py
 *.json
 *.db
 *.csv
 /__pycache__
 .idea
 .vscode
+config.py
+config2.py
 
 # Environments
 .env
