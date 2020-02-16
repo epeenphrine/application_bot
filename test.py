@@ -24,6 +24,8 @@ print(len(hrefs))
 
 for href in hrefs:
     driver.get(href)
+
+print('hello world')
 #driver.find_element_by_class_name('indeed-apply-button').click()
 
 #wait = WebDriverWait(driver, 10)
