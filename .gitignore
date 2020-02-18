@@ -7,7 +7,7 @@ scholarships.db
 .vscode
 config.py
 config2.py
-
+*.log
 # Environments
 .env
 .venv
