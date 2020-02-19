@@ -3,5 +3,5 @@ login_page = 'https://secure.indeed.com/account/login?hl=en_US&co=US&continue=ht
 username = 'blahblabh@gmail.com ' # put your username here
 password = 'password12345' # put your password here
 
-job_search = '' #job search url
+job_search = [] #job search url
 job_urls = [] #job urls
