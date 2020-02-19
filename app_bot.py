@@ -81,7 +81,7 @@ class AppBot:
     def click_job(self):
         #jobs = self.driver.find_elements_by_class_name("jobsearch-SerpJobCard")
         wait = WebDriverWait(self.driver, 10)
-        apply_button = wait.until(EC.presence_of_element_located((By.XPATH, '//*[@id="indeedApplyButtonContainer"]/span/div[2]/button)))
+        apply_button = wait.until(EC.presence_of_element_located((By.XPATH, '//*[@id="indeedApplyButtonContainer"]/span/div[2]/button')))
         #jobs = self.driver.find_elements_by_class_name("jobsearch-SerpJobCard") 
         print(apply_button)
         apply_button.click()
@@ -103,9 +103,8 @@ class AppBot:
         for href in self.hrefs:
             print(f" trying : {href} ")
             self.driver.get(href)
-            time.sleep(2)
             try: 
-                self.driver.find_element_by_xpath('//*[@id="indeedApplyButtonContainer"]/span/div[2]/button').click()
+                self.click_job()
                 print('clicked jobs')
                 time.sleep(2)
             except:
@@ -115,3 +114,4 @@ bot.login()
 time.sleep(4)
 bot.find_jobs()
 time.sleep(4)
+bot.apply_jobs()
