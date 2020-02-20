@@ -8,6 +8,8 @@ from selenium.webdriver.support import expected_conditions as EC
 import re
 import time 
 import json
+from datetime import datetime
+from datetime import timedelta
 ## non standard and non pip install imports 
 from config2 import username, password, job_search, job_urls, login_page
 
@@ -68,8 +70,61 @@ class AppBot:
                 print('no popup')
             print(len(self.hrefs))
 
-    def question_handler(self, questions, input_text):
-        pass
+    def question_handler(self):
+        wait = WebDriverWait(self.driver, 1)
+        cont_button = self.driver.find_elements_by_xpath('//*[@id="form-action-continue"]')
+        if cont_button:
+            textareas = self.driver.find_elements_by_xpath('//*[starts-with(@id, "q_")]/div')
+            print(textareas)
+            textinputs = []
+            questions = []
+            for item in textareas:
+                text_item = item.text
+                if text_item:
+                    print(text_item)
+                    questions.append(text_item.lower())
+                    xpath_textarea = item.find_elements_by_xpath('.//textarea')
+                    if xpath_textarea:
+                        textinputs.append(xpath_textarea[0])
+                    xpath_inputarea = item.find_elements_by_xpath('.//input')
+                    if xpath_inputarea:
+                        textinputs.append(xpath_inputarea[0])
+                    try:
+                        xpath_select = item.find_element_by_xpath('//*[@id="select-0"]/option[2]')
+                    except:
+                        pass
+            print(questions)
+            print(textinputs)
+            print(len(textinputs))
+            if questions or textinputs:
+                for a,b in zip(questions, textinputs):
+                    print(a)
+                    if 'pay' in a:
+                        b.send_keys('50000')
+                    if 'address' in a:
+                        b.send_keys('123 sesame street')
+                    if 'city' in a:
+                        b.send_keys('')
+                    if 'state' in a:
+                        b.send_keys('new york')
+                    if 'postal' in a:
+                        b.send_keys('10310')
+                    if 'linkedin' in a:
+                        b.send_keys('linkedin.com/blahblahblh')
+                    if 'available' in a:
+                        available = datetime.now() + timedelta(days=5)
+                        available = available.strftime('%m/%d/%Y')
+                        b.send_keys(f'{str(available)}')
+                    if 'learn about this opportunity' in a:
+                        b.send_keys('found it on job board')
+                    if 'country' in a:
+                        print('in country')
+                        xpath_select.click()
+            time.sleep(1)
+            cont_button[0].click()
+            return self.question_handler()
+        else:
+            print('no more cont button ')
 
     def iframe_handler(self):
 
@@ -84,34 +139,34 @@ class AppBot:
             self.driver.switch_to.frame(frame)
             time.sleep(2)
             self.driver.switch_to.frame(0)
-        textareas = self.driver.find_elements_by_xpath('//*[starts-with(@id, "q_")]/div')
-        print(textareas)
-        textinputs = []
-        questions = []
-        for item in textareas:
-            text_item = item.text
-            if text_item:
-                print(text_item)
-                questions.append(text_item.lower())
-                try:
-                    xpath_textarea = item.find_element_by_xpath('.//textarea')
-                    textinputs.append(xpath_textarea)
-                except:
-                    xpath_inputarea = item.find_element_by_xpath('.//input')
-                    textinputs.append(xpath_inputarea)
-        print(questions)
-        print(textinputs)
-        print(len(textinputs))
+        #textareas = self.driver.find_elements_by_xpath('//*[starts-with(@id, "q_")]/div')
+        #print(textareas)
+        #textinputs = []
+        #questions = []
+        #for item in textareas:
+            #text_item = item.text
+            #if text_item:
+                #print(text_item)
+                #questions.append(text_item.lower())
+                #try:
+                    #xpath_textarea = item.find_element_by_xpath('.//textarea')
+                    #textinputs.append(xpath_textarea)
+                #except:
+                    #xpath_inputarea = item.find_element_by_xpath('.//input')
+                    #textinputs.append(xpath_inputarea)
+        #print(questions)
+        #print(textinputs)
+        #print(len(textinputs))
 
-        for a,b in zip(questions, textinputs):
-            if 'pay' in a:
-                b.send_keys('50000')
-            if 'address' in a:
-                b.send_keys('123 sesame street')
-            if 'city' in a:
-                b.send_keys('')
+        #for a,b in zip(questions, textinputs):
+            #if 'pay' in a:
+                #b.send_keys('50000')
+            #if 'address' in a:
+                #b.send_keys('123 sesame street')
+            #if 'city' in a:
+                #b.send_keys('')
 
-        self.driver.find_element_by_xpath('//*[@id="form-action-continue"]').click()                
+        #self.driver.find_element_by_xpath('//*[@id="form-action-continue"]').click()                
 
     def iframe_closer(self):
         wait = WebDriverWait(self.driver, 2)
@@ -170,3 +225,4 @@ bot.login()
 time.sleep(4)
 bot.click_job()
 bot.iframe_handler()
+bot.question_handler()
