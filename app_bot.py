@@ -68,7 +68,11 @@ class AppBot:
                 print('no popup')
             print(len(self.hrefs))
 
+    def question_handler(self, questions, input_text):
+        pass
+
     def iframe_handler(self):
+
         wait = WebDriverWait(self.driver, 2)
         try:
             frame = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, 'iframe[name$=modal-iframe]')))
@@ -83,11 +87,31 @@ class AppBot:
         textareas = self.driver.find_elements_by_xpath('//*[starts-with(@id, "q_")]/div')
         print(textareas)
         textinputs = []
+        questions = []
         for item in textareas:
             text_item = item.text
             if text_item:
                 print(text_item)
-                textinputs.append(item)
+                questions.append(text_item.lower())
+                try:
+                    xpath_textarea = item.find_element_by_xpath('.//textarea')
+                    textinputs.append(xpath_textarea)
+                except:
+                    xpath_inputarea = item.find_element_by_xpath('.//input')
+                    textinputs.append(xpath_inputarea)
+        print(questions)
+        print(textinputs)
+        print(len(textinputs))
+
+        for a,b in zip(questions, textinputs):
+            if 'pay' in a:
+                b.send_keys('50000')
+            if 'address' in a:
+                b.send_keys('123 sesame street')
+            if 'city' in a:
+                b.send_keys('')
+
+        self.driver.find_element_by_xpath('//*[@id="form-action-continue"]').click()                
 
     def iframe_closer(self):
         wait = WebDriverWait(self.driver, 2)
