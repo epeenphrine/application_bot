@@ -235,8 +235,13 @@ class AppBot:
                 decent_jobs = json.load(f)
         else:
             decent_jobs = []
+        if os.path.exists('jobs.json'):
+            with open('jobs.json') as f:
+                jobs = json.load(f)
+        else:
+            jobs = []
         for href in self.hrefs:
-            if href not in decent_jobs:
+            if href not in jobs and (not any(job.get('url', None)) == href for job in jobs):
                 print(f'bringing up : {href} ')
                 self.driver.get(href)
                 applied_button2 = self.driver.find_elements_by_xpath('//*[@id="saveJobButtonContainer"]/div/div/div/div[2]/button')
@@ -252,14 +257,31 @@ class AppBot:
                         print('takes to company site')
                     else:
                         self.click_job()
-                        decent_jobs.append(href)
+                        dict_construct = {'url': href, 'applied': False}
+                        jobs.append(dict_construct)
             else:
                 print(f'{href} in json \nskipping this url')
-        with open ('decent_jobs.json', 'w') as f:
-            json.dump(decent_jobs, f)
+        with open ('jobs.json', 'w') as f:
+            json.dump(jobs, f)
 
     def manual_apply(self):
-        with open ('decent_jobs.json') as f:
-            decent_jobs = json.load(f)
-        for job in decent_jobs:
-            webbrowser.open(job)
+        if os.path.exists('jobs.json'):
+            with open('jobs.json') as f:
+                jobs = json.load(f)
+        else:
+            print('no jobs in jobs.json run find_jobs then filter_jobs')
+        for i in range(0, len(jobs)):
+            job = jobs[i]
+            if False in job.values():
+                webbrowser.open(job['url'])
+                print(job)
+                wait = input('press enter to go next. press any key then enter to stop here')
+                job['applied'] = True
+                jobs[i] = job
+                if wait == '':
+                    print(job)
+                    with open('jobs.json', 'w') as f:
+                        json.dump(jobs, f)
+                if wait != '':
+                    print('ending here')
+                    return 
