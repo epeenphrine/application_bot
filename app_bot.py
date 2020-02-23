@@ -10,16 +10,21 @@ import time
 import json
 from datetime import datetime
 from datetime import timedelta
+import winsound
 ## non standard and non pip install imports 
-from config2 import username, password, job_search, job_urls, login_page
+from config2 import username, password, job_search, job_urls, login_page, pay, address, state, postal, linkedin, opportunity
 
 
 #EC.text_to_be_present_in_element((By.ID, "operations_monitoring_tab_current_ct_fields_no_data"), "No data to display")
 
 class AppBot:
     def __init__(self):
+        ## setup to modify navigator.webdriver to prevent capcha from popping up
+        self.options = webdriver.ChromeOptions()
+        self.options.add_experimental_option("excludeSwitches", ["enable-automation"])
+        self.options.add_experimental_option('useAutomationExtension', False)
         ##initialize chrome webdriver 
-        self.driver = webdriver.Chrome('./chromedriver/chromedriver.exe')
+        self.driver = webdriver.Chrome(options=self.options, executable_path=r'./chromedriver/chromedriver.exe')
     
     initial_job  = ['https://www.indeed.com/jobs?q=data+engineer&l=Staten+Island,+NY&rbl=New+York,+NY&jlid=45f6c4ded55c00bf&explvl=entry_level']
     ## list of hrefs that contain jobs 
@@ -69,65 +74,85 @@ class AppBot:
             except:
                 print('no popup')
             print(len(self.hrefs))
-
+    ## question handling
     def question_handler(self):
-        wait = WebDriverWait(self.driver, 1)
+        time.sleep(1)
         cont_button = self.driver.find_elements_by_xpath('//*[@id="form-action-continue"]')
+        print(f' cont button :  {cont_button}')
         if cont_button:
             textareas = self.driver.find_elements_by_xpath('//*[starts-with(@id, "q_")]/div')
-            print(textareas)
-            textinputs = []
-            questions = []
-            for item in textareas:
-                text_item = item.text
-                if text_item:
-                    print(text_item)
-                    questions.append(text_item.lower())
-                    xpath_textarea = item.find_elements_by_xpath('.//textarea')
-                    if xpath_textarea:
-                        textinputs.append(xpath_textarea[0])
-                    xpath_inputarea = item.find_elements_by_xpath('.//input')
-                    if xpath_inputarea:
-                        textinputs.append(xpath_inputarea[0])
-                    try:
-                        xpath_select = item.find_element_by_xpath('//*[@id="select-0"]/option[2]')
-                    except:
-                        pass
+            if textareas:
+                print(f' printing textareas : {textareas}')
+                textinputs = []
+                questions = []
+                for item in textareas:
+                    text_item = item.text
+                    if text_item:
+                        questions.append(text_item.lower())
+                        xpath_textarea = item.find_elements_by_xpath('.//textarea')
+                        if xpath_textarea:
+                            textinputs.append(xpath_textarea[0])
+                        xpath_inputarea = item.find_elements_by_xpath('.//input')
+                        if xpath_inputarea:
+                            textinputs.append(xpath_inputarea[0])
             print(questions)
             print(textinputs)
             print(len(textinputs))
-            if questions or textinputs:
-                for a,b in zip(questions, textinputs):
-                    print(a)
-                    if 'pay' in a:
-                        b.send_keys('50000')
-                    if 'address' in a:
-                        b.send_keys('123 sesame street')
-                    if 'city' in a:
-                        b.send_keys('')
-                    if 'state' in a:
-                        b.send_keys('new york')
-                    if 'postal' in a:
-                        b.send_keys('10310')
-                    if 'linkedin' in a:
-                        b.send_keys('linkedin.com/blahblahblh')
-                    if 'available' in a:
-                        available = datetime.now() + timedelta(days=5)
-                        available = available.strftime('%m/%d/%Y')
-                        b.send_keys(f'{str(available)}')
-                    if 'learn about this opportunity' in a:
-                        b.send_keys('found it on job board')
-                    if 'country' in a:
-                        print('in country')
-                        xpath_select.click()
-            time.sleep(1)
+            for i in range(0, len(questions)):
+                try:
+                    a = questions[i]
+                    b = textinputs[i]
+                except:
+                    pass
+                if 'pay' in a:
+                    b.send_keys(pay)
+                if 'address' in a:
+                    b.send_keys(address)
+                if 'city' in a:
+                    b.send_keys('')
+                if 'state' in a:
+                    b.send_keys(state)
+                if 'postal' in a:
+                    b.send_keys(postal)
+                if 'linkedin' in a:
+                    b.send_keys(linkedin)
+                if 'available' in a:
+                    available = datetime.now() + timedelta(days=5) 
+                    available = available.strftime('%m/%d/%Y')
+                    b.send_keys(f'{str(available)}')
+                if 'learn about this opportunity' in a:
+                    b.send_keys('found it on job board')
+                if 'country' in a:
+                    xpath_select = self.driver.find_elements_by_xpath('//*[@id="select-0"]')
+                    xpath_select[0].click()
+                    print('selected drop down menu')
+                    time.sleep(1)
+                    xpath_select = self.driver.find_elements_by_xpath('//*[@id="select-0"]/option[2]')
+                    xpath_select[0].click()
+                    print('selected country in drop down menu')
+            if not questions:
+                xpath_select = self.driver.find_elements_by_xpath('//*[@id="resumeTypeSelector"]')
+                xpath_select[0].click()
+                print(f'drop down menu clicked')
+                time.sleep(1)
+                xpath_select = self.driver.find_elements_by_xpath('//*[@id="resumeTypeSelector"]/option[4]')
+                xpath_select[0].click()
+                print(f'options clicked !')
             cont_button[0].click()
             return self.question_handler()
         else:
             print('no more cont button ')
+            capcha = self.driver.find_elements_by_xpath('//*[@id="rc-anchor-container"]')
+            if capcha:
+                winsound.Beep(2500, 2000)
+                print('capcha present need to handle it')
+            else:
+                apply_button = self.driver.find_elements_by_xpath('//*[@id="form-action-submit"]')
+                apply_button[0].click()
+
+
 
     def iframe_handler(self):
-
         wait = WebDriverWait(self.driver, 2)
         try:
             frame = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, 'iframe[name$=modal-iframe]')))
@@ -139,34 +164,7 @@ class AppBot:
             self.driver.switch_to.frame(frame)
             time.sleep(2)
             self.driver.switch_to.frame(0)
-        #textareas = self.driver.find_elements_by_xpath('//*[starts-with(@id, "q_")]/div')
-        #print(textareas)
-        #textinputs = []
-        #questions = []
-        #for item in textareas:
-            #text_item = item.text
-            #if text_item:
-                #print(text_item)
-                #questions.append(text_item.lower())
-                #try:
-                    #xpath_textarea = item.find_element_by_xpath('.//textarea')
-                    #textinputs.append(xpath_textarea)
-                #except:
-                    #xpath_inputarea = item.find_element_by_xpath('.//input')
-                    #textinputs.append(xpath_inputarea)
-        #print(questions)
-        #print(textinputs)
-        #print(len(textinputs))
-
-        #for a,b in zip(questions, textinputs):
-            #if 'pay' in a:
-                #b.send_keys('50000')
-            #if 'address' in a:
-                #b.send_keys('123 sesame street')
-            #if 'city' in a:
-                #b.send_keys('')
-
-        #self.driver.find_element_by_xpath('//*[@id="form-action-continue"]').click()                
+                    
 
     def iframe_closer(self):
         wait = WebDriverWait(self.driver, 2)
@@ -206,13 +204,16 @@ class AppBot:
       
     def apply_jobs(self):
         clickable_jobs = []
+        with open('clickable_jobs.json') as f:
+            clickable_jobs_check = json.load(f)
         for href in self.hrefs:
             print(f" trying : {href} ")
             self.driver.get(href)
             try: 
                 self.click_job()
                 print('\nclicked jobs')
-                clickable_jobs.append(href)
+                if href in clickable_jobs_check:
+                    clickable_jobs.append(href)
                 self.iframe_closer()
                 print('\niframe handled')
                 time.sleep(1)
@@ -220,9 +221,14 @@ class AppBot:
                 print('didnt work or takes to company site')
         with open ('clickable_jobs.json', 'w') as f:
             json.dump(clickable_jobs, f)
-bot = AppBot()
-bot.login()
-time.sleep(4)
-bot.click_job()
-bot.iframe_handler()
-bot.question_handler()
+
+    def manual_apply(self):
+        for href in self.hrefs:
+            print(f'bringing up : {href} ')
+            self.driver.get(href)
+            applied_button = self.driver.find_elements_by_xpath('//*[@id="saveJobButtonContainer"]/div/div/div/div[1]/button')
+            if applied_button:
+                print('applied to this job skipping')
+            else:
+                print('job that you haven`t applied to')
+                wait = input('press any key and enter to continue applying to next job')

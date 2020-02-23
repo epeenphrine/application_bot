@@ -5,3 +5,11 @@ password = 'password12345' # put your password here
 
 job_search = [] #job search url
 job_urls = [] #job urls
+
+#dumb filter questions. You may need to add more questions and answers 
+pay = ''
+address = ''
+state = ''
+postal = ''
+linkedin = ''
+opportunity = 'found it on job board'
