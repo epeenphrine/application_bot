@@ -11,9 +11,10 @@ import json
 from datetime import datetime
 from datetime import timedelta
 import winsound
+import webbrowser
+import os
 ## non standard and non pip install imports 
 from config2 import username, password, job_search, job_urls, login_page, pay, address, state, postal, linkedin, opportunity
-
 
 #EC.text_to_be_present_in_element((By.ID, "operations_monitoring_tab_current_ct_fields_no_data"), "No data to display")
 
@@ -26,7 +27,6 @@ class AppBot:
         ##initialize chrome webdriver 
         self.driver = webdriver.Chrome(options=self.options, executable_path=r'./chromedriver/chromedriver.exe')
     
-    initial_job  = ['https://www.indeed.com/jobs?q=data+engineer&l=Staten+Island,+NY&rbl=New+York,+NY&jlid=45f6c4ded55c00bf&explvl=entry_level']
     ## list of hrefs that contain jobs 
     hrefs = []
 
@@ -56,24 +56,25 @@ class AppBot:
 
     # stores href of all job posting in a list
     def find_jobs(self):
-        self.driver.get(self.initial_job[0])
-        for i in range(0, 4):
-            a_tags = self.driver.find_elements_by_tag_name('a')
-            for a_tag in a_tags:
-                href = a_tag.get_attribute('href')
-                href = str(href)
-                if re.match(r'^https://www.indeed.com/pagead/', href) or re.match(r'^https://www.indeed.com/rc/clk', href):
-                    self.hrefs.append(href)
-                    print(href)
-            self.driver.find_element_by_class_name('np').click()
-            ## popup that may come up when pressing next page 
-            wait = WebDriverWait(self.driver, 2)
-            try:
-                popup = wait.until(EC.presence_of_element_located((By.XPATH, '//*[@id="popover-close-link"]')))
-                popup.click()
-            except:
-                print('no popup')
-            print(len(self.hrefs))
+        for url in job_urls:
+            self.driver.get(url)
+            for i in range(0, 4):
+                a_tags = self.driver.find_elements_by_tag_name('a')
+                for a_tag in a_tags:
+                    href = a_tag.get_attribute('href')
+                    href = str(href)
+                    if re.match(r'^https://www.indeed.com/pagead/', href) or re.match(r'^https://www.indeed.com/rc/clk', href):
+                        self.hrefs.append(href)
+                        print(href)
+                self.driver.find_element_by_class_name('np').click()
+                ## popup that may come up when pressing next page 
+                wait = WebDriverWait(self.driver, 2)
+                try:
+                    popup = wait.until(EC.presence_of_element_located((By.XPATH, '//*[@id="popover-close-link"]')))
+                    popup.click()
+                except:
+                    print('no popup')
+                print(len(self.hrefs))
     ## question handling
     def question_handler(self):
         time.sleep(1)
@@ -95,6 +96,7 @@ class AppBot:
                         xpath_inputarea = item.find_elements_by_xpath('.//input')
                         if xpath_inputarea:
                             textinputs.append(xpath_inputarea[0])
+
             print(questions)
             print(textinputs)
             print(len(textinputs))
@@ -168,7 +170,7 @@ class AppBot:
 
     def iframe_closer(self):
         wait = WebDriverWait(self.driver, 2)
-        frame = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "iframe[name$=modal-iframe]")))
+        frame = wait.until(EC.presence_of_element_located((By.css_selector, "iframe[name$=modal-iframe]")))
         self.driver.switch_to.frame(frame)
         time.sleep(2)
         self.driver.switch_to.frame(0)
@@ -187,7 +189,6 @@ class AppBot:
 
     def click_job(self):
         #jobs = self.driver.find_elements_by_class_name("jobsearch-SerpJobCard")
-        self.driver.get('https://www.indeed.com/viewjob?from=serp,iaBackPress,iaBackPress,iaBackPress&jk=3f2f91cc5ac41d8e&vjs=3')
         try:
             print('trying first method')
             wait = WebDriverWait(self.driver, 2)
@@ -214,7 +215,8 @@ class AppBot:
                 print('\nclicked jobs')
                 if href in clickable_jobs_check:
                     clickable_jobs.append(href)
-                self.iframe_closer()
+                self.iframe_handler()
+                self.question_handler()
                 print('\niframe handled')
                 time.sleep(1)
             except:
@@ -222,13 +224,38 @@ class AppBot:
         with open ('clickable_jobs.json', 'w') as f:
             json.dump(clickable_jobs, f)
 
-    def manual_apply(self):
+    def filter_jobs(self):
+        if os.path.exists('decent_jobs.json'):
+            with open('decent_jobs.json') as f:
+                decent_jobs = json.load(f)
+        else:
+            decent_jobs = []
         for href in self.hrefs:
-            print(f'bringing up : {href} ')
-            self.driver.get(href)
-            applied_button = self.driver.find_elements_by_xpath('//*[@id="saveJobButtonContainer"]/div/div/div/div[1]/button')
-            if applied_button:
-                print('applied to this job skipping')
+            if href in decent_jobs:
+                print(f'bringing up : {href} ')
+                self.driver.get(href)
+                applied_button2 = self.driver.find_elements_by_xpath('//*[@id="saveJobButtonContainer"]/div/div/div/div[2]/button')
+                print(f'applied button 2 : {applied_button2}')
+                company_site = self.driver.find_elements_by_xpath('//*[@id="viewJobButtonLinkContainer"]/div/div[2]/a') 
+                print(f'company_site : {company_site}')
+                if applied_button2:
+                    text = applied_button2[0].text
+                    print(text)
+                    if 'applied' in text.lower():
+                        print('applied')
+                    elif company_site:
+                        print('takes to company site')
+                    else:
+                        self.click_job()
+                        decent_jobs.append(href)
             else:
-                print('job that you haven`t applied to')
-                wait = input('press any key and enter to continue applying to next job')
+                print(f'{href} in json \nskipping this url')
+        with open ('decent_jobs.json', 'w') as f:
+            json.dump(decent_jobs, f)
+
+    def manual_apply(self):
+        with open ('decent_jobs.json') as f:
+            decent_jobs = json.load(f)
+        for job in decent_jobs:
+            webbrowser.open(job)
+            wait = input('press a key to go next')
