@@ -3,8 +3,9 @@ import time
 
 
 bot = AppBot()
-bot.login()
+#bot.login()
 time.sleep(4)
-bot.find_jobs()
-bot.filter_jobs()
+#bot.find_jobs()
+#bot.filter_jobs()
+
 bot.manual_apply()

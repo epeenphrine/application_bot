@@ -64,9 +64,14 @@ class AppBot:
                     href = a_tag.get_attribute('href')
                     href = str(href)
                     if re.match(r'^https://www.indeed.com/pagead/', href) or re.match(r'^https://www.indeed.com/rc/clk', href):
-                        self.hrefs.append(href)
-                        print(href)
-                self.driver.find_element_by_class_name('np').click()
+                        if href not in self.hrefs:
+                            self.hrefs.append(href)
+                            print(href)
+                        else:
+                            print('href in hrefs')
+                next_button =self.driver.find_elements_by_class_name('np')
+                if next_button:
+                    next_button[0].click() 
                 ## popup that may come up when pressing next page 
                 wait = WebDriverWait(self.driver, 2)
                 try:
@@ -231,7 +236,7 @@ class AppBot:
         else:
             decent_jobs = []
         for href in self.hrefs:
-            if href in decent_jobs:
+            if href not in decent_jobs:
                 print(f'bringing up : {href} ')
                 self.driver.get(href)
                 applied_button2 = self.driver.find_elements_by_xpath('//*[@id="saveJobButtonContainer"]/div/div/div/div[2]/button')
@@ -258,4 +263,3 @@ class AppBot:
             decent_jobs = json.load(f)
         for job in decent_jobs:
             webbrowser.open(job)
-            wait = input('press a key to go next')
