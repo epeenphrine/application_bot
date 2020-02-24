@@ -13,6 +13,7 @@ from datetime import timedelta
 import winsound
 import webbrowser
 import os
+import random
 ## non standard and non pip install imports 
 from config2 import username, password, job_search, job_urls, login_page, pay, address, state, postal, linkedin, opportunity
 
