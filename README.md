@@ -17,9 +17,10 @@ job_urls = [
 to filter for jobs that stay within job board and start bringing up each link in browser 1 by 1
 run manual_run.py interactive:
 
-python -i manual_run.py \
-run() \
-apply() \
+python -i manual_run.py
+run()
+apply()
+
 
 
 
