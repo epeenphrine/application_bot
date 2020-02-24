@@ -15,7 +15,7 @@ import webbrowser
 import os
 import random
 ## non standard and non pip install imports 
-from config import username, password, job_search, job_urls, login_page, pay, address, state, postal, linkedin, opportunity
+from config2 import username, password, job_search, job_urls, login_page, pay, address, state, postal, linkedin, opportunity
 
 #EC.text_to_be_present_in_element((By.ID, "operations_monitoring_tab_current_ct_fields_no_data"), "No data to display")
 
