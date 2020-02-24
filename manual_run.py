@@ -9,5 +9,6 @@ def run():
     bot.find_jobs()
     bot.filter_jobs()
 
-bot.manual_apply()
+def apply():
+    bot.manual_apply()
 
