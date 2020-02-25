@@ -14,10 +14,38 @@ import winsound
 import webbrowser
 import os
 import random
+from multiprocessing import Pool
 ## non standard and non pip install imports 
-from config import username, password, job_search, job_urls, login_page, pay, address, state, postal, linkedin, opportunity
+from config2 import username, password, job_search, job_urls, login_page, pay, address, state, postal, linkedin, opportunity
 
-#EC.text_to_be_present_in_element((By.ID, "operations_monitoring_tab_current_ct_fields_no_data"), "No data to display")
+
+def f_jobs(url):
+    hrefs = []
+    driver = webdriver.Chrome('./chromedriver/chromedriver.exe')
+    driver.get(url)
+    for i in range(0, 2):
+        a_tags = driver.find_elements_by_tag_name('a')
+        for a_tag in a_tags:
+            href = a_tag.get_attribute('href')
+            href = str(href)
+            if re.match(r'^https://www.indeed.com/pagead/', href) or re.match(r'^https://www.indeed.com/rc/clk', href):
+                if href not in hrefs:
+                    hrefs.append(href)
+                    print(href)
+                else:
+                    print('href in hrefs')
+        next_button = driver.find_elements_by_class_name('np')
+        if next_button:
+            next_button[0].click() 
+        ## popup that may come up when pressing next page 
+        wait = WebDriverWait( driver, 2)
+        try:
+            popup = wait.until(EC.presence_of_element_located((By.XPATH, '//*[@id="popover-close-link"]')))
+            popup.click()
+        except:
+            print('no popup')
+        print(len(hrefs))
+        return hrefs
 
 class AppBot:
     def __init__(self):
@@ -27,10 +55,9 @@ class AppBot:
         self.options.add_experimental_option('useAutomationExtension', False)
         ##initialize chrome webdriver 
         self.driver = webdriver.Chrome(options=self.options, executable_path=r'./chromedriver/chromedriver.exe')
-    
+        self.f_jobs = f_jobs
     ## list of hrefs that contain jobs 
     hrefs = []
-
     ##login using credentials
     def login(self):
         ##login page
@@ -57,30 +84,15 @@ class AppBot:
 
     # stores href of all job posting in a list
     def find_jobs(self):
-        for url in job_urls:
-            self.driver.get(url)
-            for i in range(0, 4):
-                a_tags = self.driver.find_elements_by_tag_name('a')
-                for a_tag in a_tags:
-                    href = a_tag.get_attribute('href')
-                    href = str(href)
-                    if re.match(r'^https://www.indeed.com/pagead/', href) or re.match(r'^https://www.indeed.com/rc/clk', href):
-                        if href not in self.hrefs:
-                            self.hrefs.append(href)
-                            print(href)
-                        else:
-                            print('href in hrefs')
-                next_button =self.driver.find_elements_by_class_name('np')
-                if next_button:
-                    next_button[0].click() 
-                ## popup that may come up when pressing next page 
-                wait = WebDriverWait(self.driver, 2)
-                try:
-                    popup = wait.until(EC.presence_of_element_located((By.XPATH, '//*[@id="popover-close-link"]')))
-                    popup.click()
-                except:
-                    print('no popup')
-                print(len(self.hrefs))
+        p = Pool()
+        out = p.map(self.f_jobs, job_urls)
+        p.close()
+        p.join()
+        for urls in out:
+            for url in urls:
+                if url not in self.hrefs:
+                    self.hrefs.append(url)
+        return self.hrefs
     ## question handling
     def question_handler(self):
         time.sleep(1)
@@ -231,11 +243,6 @@ class AppBot:
             json.dump(clickable_jobs, f)
 
     def filter_jobs(self):
-        if os.path.exists('decent_jobs.json'):
-            with open('decent_jobs.json') as f:
-                decent_jobs = json.load(f)
-        else:
-            decent_jobs = []
         if os.path.exists('jobs.json'):
             with open('jobs.json') as f:
                 jobs = json.load(f)
@@ -243,9 +250,9 @@ class AppBot:
             jobs = []
         for href in self.hrefs:
             if href not in jobs and (not any(job.get('url', None)) == href for job in jobs):
-                print(f'bringing up : {href} ')
+                print(f'\n\nbringing up : {href} ')
                 self.driver.get(href)
-                applied_button2 = self.driver.find_elements_by_xpath('//*[@id="saveJobButtonContainer"]/div/div/div/div[2]/button')
+                applied_button2 = self.driver.find_elements_by_xpath('//*[@id="indeedApplyButtonContainer"]/span/div[2]/button/div')
                 print(f'applied button 2 : {applied_button2}')
                 company_site = self.driver.find_elements_by_xpath('//*[@id="viewJobButtonLinkContainer"]/div/div[2]/a') 
                 print(f'company_site : {company_site}')
@@ -257,13 +264,15 @@ class AppBot:
                     elif company_site:
                         print('takes to company site')
                     else:
-                        self.click_job()
                         dict_construct = {'url': href, 'applied': False}
                         jobs.append(dict_construct)
+                        print('appended')
             else:
                 print(f'{href} in json \nskipping this url')
+        
         with open ('jobs.json', 'w') as f:
             json.dump(jobs, f)
+        print('filter jobs complete')
 
     def manual_apply(self):
         if os.path.exists('jobs.json'):

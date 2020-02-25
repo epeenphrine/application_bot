@@ -15,3 +15,5 @@ if os.path.exists('jobs.json'):
 
 for item in jobs:
     print(item)
+
+print(len(jobs))
