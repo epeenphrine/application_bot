@@ -18,7 +18,6 @@ from multiprocessing import Pool
 ## non standard and non pip install imports 
 from config2 import username, password, job_search, job_urls, login_page, pay, address, state, postal, linkedin, opportunity
 
-
 def f_jobs(url):
     hrefs = []
     driver = webdriver.Chrome('./chromedriver/chromedriver.exe')
