@@ -7,8 +7,8 @@ job_search = [] #job search url
 job_urls = [] #job urls
 
 #dumb filter questions. You may need to add more questions and answers 
-pay = ''
-address = ''
+pay = '123'
+address = '123'
 state = ''
 postal = ''
 linkedin = ''
