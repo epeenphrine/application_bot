@@ -10,6 +10,7 @@ from selenium.webdriver.support import expected_conditions as EC
 
 from config2 import job_urls
 import re
+import re
 
 bot = AppBot()
 
