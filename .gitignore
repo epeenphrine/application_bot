@@ -5,6 +5,7 @@ scholarships.db
 /__pycache__
 .idea
 .vscode
+config.py
 config2.py
 *.log
 # Environments
