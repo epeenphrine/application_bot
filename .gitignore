@@ -8,6 +8,8 @@ scholarships.db
 config.py
 config2.py
 *.log
+gitscript.sh
+gitscript.py
 # Environments
 .env
 .venv
