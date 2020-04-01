@@ -11,7 +11,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from config2 import job_urls
 import re
 
-bot = AppBot()
+#bot = AppBot()
 
 def run():
     bot.find_jobs()
